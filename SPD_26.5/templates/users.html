@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-bottom:20px;">用户管理</h2>
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th><th>用户名</th><th>手机号</th><th>地址</th><th>等级</th><th>注册时间</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u[0] }}</td><td>{{ u[1] }}</td><td>{{ u[2] }}</td><td>{{ u[3] }}</td>
+                <td>{% if u[4]==0 %}普通{% elif u[4]==1 %}银牌{% elif u[4]==2 %}金牌{% else %}钻石{% endif %}</td>
+                <td>{{ u[5] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

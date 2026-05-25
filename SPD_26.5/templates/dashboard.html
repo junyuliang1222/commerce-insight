@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-bottom:20px;">首页看板</h2>
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="num">{{ user_count }}</div>
+        <div class="label">用户总数</div>
+    </div>
+    <div class="stat-card">
+        <div class="num">{{ product_count }}</div>
+        <div class="label">商品总数</div>
+    </div>
+    <div class="stat-card">
+        <div class="num">{{ order_count }}</div>
+        <div class="label">订单总数</div>
+    </div>
+    <div class="stat-card">
+        <div class="num">¥{{ "%.2f"|format(total_sales) }}</div>
+        <div class="label">有效销售额</div>
+    </div>
+</div>
+{% endblock %}

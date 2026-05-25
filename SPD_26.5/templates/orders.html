@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-bottom:20px;">订单管理</h2>
+<div class="card">
+    <table>
+        <thead>
+            <tr>
+                <th>订单号</th><th>下单用户</th><th>下单时间</th><th>状态</th><th>金额</th>
+                {% if can_edit %}<th>操作</th>{% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for o in orders %}
+            <tr>
+                <td>{{ o[0] }}</td><td>{{ o[1] }}</td><td>{{ o[2] }}</td>
+                <td>
+                    <span style="color:{% if o[3]=='已付款' %}#1890ff{% elif o[3]=='已发货' %}#fa8c16{% elif o[3]=='已完成' %}#52c41a{% elif o[3]=='已取消' %}#ff4d4f{% else %}#999{% endif %}; font-weight:600;">
+                        {{ o[3] }}
+                    </span>
+                </td>
+                <td>¥{{ o[4] }}</td>
+                {% if can_edit %}
+                <td>
+                    <button class="btn btn-blue" onclick="changeStatus({{ o[0] }}, '{{ o[3] }}')">改状态</button>
+                </td>
+                {% endif %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if can_edit %}
+<!-- 改状态弹窗 -->
+<div id="statusModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.4); justify-content:center; align-items:center;">
+    <div style="background:#fff; padding:24px; border-radius:8px; width:360px;">
+        <h3>修改订单状态</h3>
+        <form method="post" action="/orders/status">
+            <input type="hidden" name="order_id" id="status_oid">
+            <label>新状态:</label>
+            <select name="order_status" id="status_val" style="width:100%; margin-bottom:12px; padding:8px;">
+                <option value="待付款">待付款</option>
+                <option value="已付款">已付款</option>
+                <option value="已发货">已发货</option>
+                <option value="已完成">已完成</option>
+                <option value="已取消">已取消</option>
+            </select>
+            <button type="submit" class="btn btn-blue">保存</button>
+            <button type="button" class="btn" onclick="document.getElementById('statusModal').style.display='none'">取消</button>
+        </form>
+    </div>
+</div>
+<script>
+function changeStatus(oid, curStatus) {
+    document.getElementById('status_oid').value = oid;
+    document.getElementById('status_val').value = curStatus;
+    document.getElementById('statusModal').style.display = 'flex';
+}
+</script>
+{% endif %}
+{% endblock %}

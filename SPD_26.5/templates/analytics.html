@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 style="margin-bottom:20px;">销售分析</h2>
+
+<div class="chart-grid">
+    <!-- 1. 销售趋势 -->
+    <div class="card chart-card">
+        <h3>销售趋势 & 环比增长率</h3>
+        <div id="chart-sales-trend" style="height:400px;"></div>
+    </div>
+
+    <!-- 2. 品类分析 -->
+    <div class="card chart-card">
+        <h3>品类销售额排行 & 占比</h3>
+        <div class="chart-row">
+            <div id="chart-category-bar" style="flex:1; height:400px;"></div>
+            <div id="chart-category-pie" style="width:350px; height:400px;"></div>
+        </div>
+    </div>
+
+    <!-- 3. 用户分层 -->
+    <div class="card chart-card">
+        <h3>用户消费分层</h3>
+        <div id="chart-user-segment" style="height:400px;"></div>
+    </div>
+
+    <!-- 4. 归因分析 -->
+    <div class="card chart-card">
+        <h3>销售额变动归因（连环替代法）</h3>
+        <div id="chart-attribution" style="height:400px;"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script>
+// ---------- 通用工具 ----------
+function initChart(domId) {
+    var el = document.getElementById(domId);
+    if (!el) { console.error('DOM not found: ' + domId); return null; }
+    var chart = echarts.init(el);
+    window.addEventListener('resize', function() { chart.resize(); });
+    return chart;
+}
+
+function fetchChart(url, renderFn) {
+    fetch(url)
+        .then(function(r) { return r.json(); })
+        .then(renderFn)
+        .catch(function(e) { console.error(url, e); });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+
+// ---------- 1. 销售趋势 ----------
+(function() {
+    var chart = initChart('chart-sales-trend');
+    chart.showLoading();
+    fetchChart('/api/sales-trend', function(data) {
+        chart.hideLoading();
+        // data: [{month, total_sales, mom_growth}, ...]
+        var option = {
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['销售额', '环比增长率'] },
+            xAxis: { data: data.months || [], axisLabel: { rotate: 30 } },
+            yAxis: [
+                { type: 'value', name: '销售额 (元)' },
+                { type: 'value', name: '环比 (%)', axisLabel: { formatter: '{value}%' } }
+            ],
+            series: [
+                {
+                    name: '销售额', type: 'bar', data: data.sales || [],
+                    itemStyle: { color: '#1890ff' }
+                },
+                {
+                    name: '环比增长率', type: 'line', yAxisIndex: 1,
+                    data: data.growth || [],
+                    itemStyle: { color: '#ff4d4f' },
+                    markLine: { data: [{ yAxis: 0, label: { formatter: '0%' } }], silent: true }
+                }
+            ]
+        };
+        chart.setOption(option);
+    });
+})();
+
+// ---------- 2. 品类分析 ----------
+(function() {
+    var barChart = initChart('chart-category-bar');
+    var pieChart = initChart('chart-category-pie');
+    barChart.showLoading();
+    pieChart.showLoading();
+
+    fetchChart('/api/category-analysis', function(data) {
+        barChart.hideLoading();
+        pieChart.hideLoading();
+        // data: [{category, total_sales, proportion, avg_price}, ...]
+
+        var barOption = {
+            tooltip: { trigger: 'axis' },
+            xAxis: { type: 'value', name: '销售额 (元)' },
+            yAxis: { type: 'category', data: data.categories || [], inverse: true },
+            series: [{
+                type: 'bar', data: data.sales || [],
+                itemStyle: { color: '#52c41a' },
+                label: { show: true, position: 'right', formatter: function(p) {
+                    return data.proportions ? data.proportions[p.dataIndex] + '%' : '';
+                }}
+            }]
+        };
+        barChart.setOption(barOption);
+
+        var pieData = (data.categories || []).map(function(name, i) {
+            return { name: name, value: data.sales ? data.sales[i] : 0 };
+        });
+        var pieOption = {
+            tooltip: { trigger: 'item', formatter: '{b}: {d}%' },
+            series: [{
+                type: 'pie', radius: ['40%', '70%'], center: ['50%', '50%'],
+                data: pieData,
+                label: { formatter: '{b}\n{d}%' }
+            }]
+        };
+        pieChart.setOption(pieOption);
+    });
+})();
+
+// ---------- 3. 用户分层 ----------
+(function() {
+    var chart = initChart('chart-user-segment');
+    chart.showLoading();
+    fetchChart('/api/user-segmentation', function(data) {
+        chart.hideLoading();
+        // data: [{segment, user_count, total_consumption, avg_consumption}, ...]
+        var option = {
+            tooltip: { trigger: 'axis' },
+            legend: { data: ['人数', '人均消费'] },
+            xAxis: { type: 'category', data: data.segments || [] },
+            yAxis: [
+                { type: 'value', name: '人数' },
+                { type: 'value', name: '人均消费 (元)' }
+            ],
+            series: [
+                { name: '人数', type: 'bar', data: data.counts || [], itemStyle: { color: '#1890ff' } },
+                { name: '人均消费', type: 'line', yAxisIndex: 1, data: data.avg_consume || [], itemStyle: { color: '#faad14' } }
+            ]
+        };
+        chart.setOption(option);
+    });
+})();
+
+// ---------- 4. 归因分析 ----------
+(function() {
+    var el = document.getElementById('chart-attribution');
+    if (!el) { console.error('chart-attribution DOM not found'); return; }
+    var chart = echarts.init(el);
+    chart.showLoading();
+    window.addEventListener('resize', function() { chart.resize(); });
+    fetchChart('/api/attribution', function(data) {
+        chart.hideLoading();
+        console.log('attribution data:', data);
+        var categories = data.periods || [];
+        var option = {
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            legend: { data: ['销量效应', '价格效应', '混合效应'] },
+            xAxis: { type: 'category', data: categories },
+            yAxis: { type: 'value', name: '销售额变动 (元)' },
+            series: [
+                {
+                    name: '销量效应', type: 'bar', stack: 'total',
+                    data: data.volume || [],
+                    itemStyle: { color: '#1890ff' }
+                },
+                {
+                    name: '价格效应', type: 'bar', stack: 'total',
+                    data: data.price || [],
+                    itemStyle: { color: '#52c41a' }
+                },
+                {
+                    name: '混合效应', type: 'bar', stack: 'total',
+                    data: data.mix || [],
+                    itemStyle: { color: '#faad14' }
+                }
+            ]
+        };
+        chart.setOption(option);
+    });
+})();
+
+}); // DOMContentLoaded
+</script>
+
+<style>
+.chart-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.chart-card { margin-bottom: 0; }
+.chart-card:nth-child(1),
+.chart-card:nth-child(2) { grid-column: span 2; }
+.chart-row { display: flex; gap: 20px; }
+@media (max-width: 1200px) {
+    .chart-grid { grid-template-columns: 1fr; }
+    .chart-card:nth-child(1),
+    .chart-card:nth-child(2) { grid-column: span 1; }
+}
+</style>
+{% endblock %}
