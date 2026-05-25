@@ -3,6 +3,7 @@
 插入顺序：roles → permissions → role_permissions → staff → users(顾客) → products → orders → order_items
 数据量：10 工作人员 + 200 顾客 + 52 商品 + ~1000 订单 + ~3000 明细行
 """
+import os
 import pymysql
 import random
 from datetime import datetime, timedelta
@@ -11,7 +12,7 @@ from datetime import datetime, timedelta
 conn = pymysql.connect(
     host='localhost',
     user='root',
-    password='8632216hb?',
+    password=os.environ.get('DB_PASSWORD', ''),
     database='SPD_26.5',
     charset='utf8mb4'
 )

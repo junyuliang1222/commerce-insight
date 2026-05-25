@@ -2,6 +2,7 @@
 电商后台管理系统 — Flask Web 应用
 支持角色权限控制（RBAC），登录后按角色显示不同菜单
 """
+import os
 import pymysql
 from flask import Flask, render_template, request, redirect, session, url_for
 from functools import wraps
@@ -12,7 +13,7 @@ app.secret_key = 'your-secret-key-change-in-production'
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': '8632216hb?',
+    'password': os.environ.get('DB_PASSWORD', ''),
     'database': 'SPD_26.5',
     'charset': 'utf8mb4',
 }

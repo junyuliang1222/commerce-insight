@@ -91,8 +91,9 @@ users ──1:N── orders ──1:N── order_items ──N:1── product
 ## 启动与演示
 
 ```bash
-cd /Users/junyuliang/Desktop/sql_project/SPD_26.5
+cd SPD_26.5
 conda activate sql-project
+export DB_PASSWORD='your-password'
 python app.py
 # 浏览器打开 http://127.0.0.1:5000/login
 ```

@@ -31,10 +31,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # 启动 Flask 开发服务器
 cd /Users/junyuliang/Desktop/sql_project/SPD_26.5
 conda activate sql-project
+export DB_PASSWORD='your-password'
 python app.py
 # 浏览器打开 http://127.0.0.1:5000/login
 
 # 重新生成测试数据（清空全部数据并重新插入）
+export DB_PASSWORD='your-password'
 python insert_data.py
 ```
 
@@ -47,7 +49,7 @@ python insert_data.py
 | Host | localhost |
 | Port | 3306 |
 | User | root |
-| Password | `8632216hb?` |
+| Password | 通过环境变量 `DB_PASSWORD` 设置 |
 | Database | `SPD_26.5` |
 
 ---
