@@ -3,3 +3,5 @@
 __pycache__/
 *.pyc
 *.pyo
+SPD_26.5/analysis.sql
+SPD_26.5/PROJECT_SUMMARY.md
